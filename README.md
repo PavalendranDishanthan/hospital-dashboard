@@ -1,56 +1,46 @@
-# Welcome to your Expo app 👋
+# Hospital Dashboard – IV Fluid Monitor
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A nurse-station dashboard that monitors IV fluid bags in real time. ESP32 weight sensors write readings to Firebase Realtime Database; the app shows every patient's remaining fluid, status and estimated time to empty.
 
-## Get started
+Built with Expo (React Native + Expo Router), TypeScript, Zustand and Firebase.
 
-1. Install dependencies
+## Features
 
-   ```bash
-   npm install
-   ```
+- Live patient cards with circular gauge, weight, percentage and status (NORMAL / CAUTION / CRITICAL)
+- Assign a device to a patient (room, bed, medicine, volume)
+- **Alert Center**
+  - Ward summary tiles (Total / Normal / Caution / Critical) that double as status filters
+  - Search by patient, room, bed, medicine or device ID
+  - Most urgent patients always sorted first
+  - Critical alert banner with a mute toggle
+  - Voice alert when a bag becomes critical (re-arms after the bag is replaced)
+- **Bag replaced** button: resets a patient's bag to full volume
+- **Discharge** button (two-tap confirm): unassigns the device
+- **Activity log**: timestamped status changes for the current session
+- Login form validation and **Log out**
 
-2. Start the app
+> Note: the login screen is a UI placeholder (no real authentication backend yet).
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Getting started
 
 ```bash
-npm run reset-project
+npm install
+npx expo start --web     # or: npx expo start  (then press a / i)
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Firebase settings live in `src/services/firebaseConfig.ts`. Make sure your Realtime Database security rules are not open to the public before deploying.
 
-### Other setup steps
+## Project structure
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```
+src/
+  components/   PatientCard, WardSummaryBar, AlertBanner, ActivityLog, DeviceMappingModal, CircularGauge
+  screens/      LoginScreen, DashboardScreen
+  services/     firebaseConfig, VoiceAlertService
+  store/        useDeviceStore (Zustand + Firebase)
+  utils/        wardStats (summary, filter/sort, status-change detection)
+```
 
-## Learn more
+## Team
 
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- _Add each team member's name and what they built here._
