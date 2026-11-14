@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { db } from '../services/firebaseConfig';
-import { ref, onValue, set, update } from 'firebase/database';
+import { ref, onValue, set, update, remove } from 'firebase/database';
 
 export interface DeviceData {
   device_id: string;
@@ -18,6 +18,8 @@ interface DeviceStore {
   initDevices: (devices: DeviceData[]) => void;
   addDevice: (device: DeviceData) => Promise<void>;
   updateDeviceWeight: (id: string, weight: number) => Promise<void>;
+  refillDevice: (id: string) => Promise<void>;
+  removeDevice: (id: string) => Promise<void>;
   startListening: () => () => void; // Returns unsubscribe function
 }
 
@@ -51,6 +53,18 @@ export const useDeviceStore = create<DeviceStore>((setStore, get) => ({
       current_weight_g: weight,
       device_status: status
     });
+  },
+
+  // Nurse swapped the bag: reset the reading to the full volume (status returns to NORMAL).
+  refillDevice: async (id) => {
+    const device = get().devices[id];
+    if (!device) return;
+    await get().updateDeviceWeight(id, device.total_volume_ml);
+  },
+
+  // Discharge / unassign: removes the device mapping from Firebase.
+  removeDevice: async (id) => {
+    await remove(ref(db, `devices/${id}`));
   },
 
   startListening: () => {

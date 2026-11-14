@@ -5,6 +5,16 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [useBiometrics, setUseBiometrics] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleLogin = () => {
+    if (!username.trim() || !password) {
+      setError('Enter your Staff ID and password to continue.');
+      return;
+    }
+    setError('');
+    onLogin();
+  };
 
   return (
     <View style={styles.container}>
@@ -37,7 +47,9 @@ export default function LoginScreen({ onLogin }: { onLogin: () => void }) {
           />
         </View>
 
-        <TouchableOpacity style={styles.loginBtn} onPress={onLogin}>
+        {error !== '' && <Text style={styles.error}>{error}</Text>}
+
+        <TouchableOpacity style={styles.loginBtn} onPress={handleLogin}>
           <Text style={styles.loginText}>Authenticate</Text>
         </TouchableOpacity>
       </View>
@@ -89,6 +101,11 @@ const styles = StyleSheet.create({
   },
   biometricText: {
     color: '#94a3b8',
+  },
+  error: {
+    color: '#f87171',
+    fontSize: 13,
+    marginBottom: 12,
   },
   loginBtn: {
     backgroundColor: '#0d9488',

@@ -1,13 +1,50 @@
-import React, { memo } from 'react';
-import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
+import React, { memo, useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, useWindowDimensions, TouchableOpacity } from 'react-native';
 import { useDeviceStore } from '../store/useDeviceStore';
 import CircularGauge from './CircularGauge';
 
 const PatientCard = memo(({ deviceId }: { deviceId: string }) => {
   const device = useDeviceStore(state => state.devices[deviceId]);
   const { width } = useWindowDimensions();
-  
+  const [confirmingDischarge, setConfirmingDischarge] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (confirmTimer.current) clearTimeout(confirmTimer.current);
+    };
+  }, []);
+
   if (!device) return null;
+
+  const handleRefill = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await useDeviceStore.getState().refillDevice(deviceId);
+    } catch (e) {
+      console.error('Refill failed', e);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Two-tap confirm (works on web and mobile): first tap arms, second tap discharges.
+  const handleDischarge = async () => {
+    if (!confirmingDischarge) {
+      setConfirmingDischarge(true);
+      confirmTimer.current = setTimeout(() => setConfirmingDischarge(false), 3000);
+      return;
+    }
+    if (confirmTimer.current) clearTimeout(confirmTimer.current);
+    try {
+      await useDeviceStore.getState().removeDevice(deviceId);
+    } catch (e) {
+      console.error('Discharge failed', e);
+      setConfirmingDischarge(false);
+    }
+  };
 
   const percentage = Math.max(0, (device.current_weight_g / device.total_volume_ml) * 100);
   
@@ -51,6 +88,18 @@ const PatientCard = memo(({ deviceId }: { deviceId: string }) => {
           TTE: {hours}h {mins}m
         </Text>
         <Text style={[styles.statusText, { color: statusColor }]}>{device.device_status}</Text>
+      </View>
+
+      <View style={styles.actions}>
+        <TouchableOpacity style={[styles.actionBtn, styles.refillBtn]} onPress={handleRefill} disabled={busy}>
+          <Text style={styles.actionText}>{busy ? 'Updating...' : 'Bag replaced'}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.actionBtn, confirmingDischarge ? styles.confirmBtn : styles.dischargeBtn]}
+          onPress={handleDischarge}
+        >
+          <Text style={styles.actionText}>{confirmingDischarge ? 'Tap again to confirm' : 'Discharge'}</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -125,5 +174,30 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 12,
     fontWeight: 'bold',
-  }
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 14,
+  },
+  actionBtn: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  refillBtn: {
+    backgroundColor: '#0f766e',
+  },
+  dischargeBtn: {
+    backgroundColor: '#334155',
+  },
+  confirmBtn: {
+    backgroundColor: '#b91c1c',
+  },
+  actionText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
 });
